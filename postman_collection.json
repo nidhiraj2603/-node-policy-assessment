@@ -1,0 +1,234 @@
+{
+  "info": {
+    "_postman_id": "c89f6e14-2391-4e78-98e1-512fa38b2910",
+    "name": "Policy Assessment & System Management API",
+    "description": "Complete Postman Collection for Node.js Policy Assessment Backend.\n\nIncludes:\n- Task 1: Upload (Worker Threads), Search by Username, Aggregated Policies by User, 6 MongoDB Collections.\n- Task 2: Real-time CPU Status & 70% Usage Auto-Restart, Scheduled Message DB Insertion Post-Service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System Info & Health",
+      "item": [
+        {
+          "name": "Root - API Directory & Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Returns API directory, available endpoints, and service status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task 1 - Policy Management",
+      "item": [
+        {
+          "name": "1. Upload CSV/XLSX (Worker Threads)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Select sample-data.csv or sample-data.xlsx from the data/ folder"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", "upload"]
+            },
+            "description": "Uploads attached CSV or XLSX file and processes it asynchronously using Node.js Worker Threads.\nPopulates 6 distinct collections in MongoDB: Agent, User, UserAccount, PolicyCategory (LOB), PolicyCarrier, and Policy."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Search Policy by Username (Query Param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/search?username=Lura",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", "search"],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "Lura",
+                  "description": "Name or username of the user to search"
+                }
+              ]
+            },
+            "description": "Finds policy information using the username / firstname. Populates full User, Category (LOB), Carrier, Account, and Agent references."
+          },
+          "response": []
+        },
+        {
+          "name": "2b. Search Policy by Username (Route Param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/search/Torie",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", "search", "Torie"]
+            },
+            "description": "Finds policy information using path parameter format."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Aggregated Policy by Each User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/aggregated",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", "aggregated"]
+            },
+            "description": "Executes MongoDB aggregation pipeline grouping policies by user, returning total policies count, total premium amount, and breakdown."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task 2 - CPU Monitoring & Server Restart",
+      "item": [
+        {
+          "name": "1. Get Real-Time CPU Utilization & System Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/system/cpu",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "system", "cpu"]
+            },
+            "description": "Tracks real-time CPU utilization percentage across all cores, memory usage (system and process), load average, and server uptime."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Simulate High CPU Load (Test 70% Auto-Restart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 3000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/system/simulate-cpu-load",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "system", "simulate-cpu-load"]
+            },
+            "description": "Simulates computational CPU load for specified milliseconds to push usage >= 70% and verify that the server triggers auto-restart."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Trigger Manual Server Restart",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/system/restart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "system", "restart"]
+            },
+            "description": "Manually triggers the server restart sequence to verify graceful recycling."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task 2 - Scheduled Message Service",
+      "item": [
+        {
+          "name": "1. Schedule Message Post-Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Policy premium renewal reminder notice for client\",\n  \"day\": \"today\",\n  \"time\": \"19:30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/schedule",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "schedule"]
+            },
+            "description": "Takes 'message', 'day', and 'time' in body parameters and schedules insertion into the database at that particular day and time.\nSupports days: 'today', 'tomorrow', '2026-09-15', or weekdays like 'Monday'.\nSupports times: '14:30', '14:30:00', '2:30 PM'."
+          },
+          "response": []
+        },
+        {
+          "name": "2. View All Scheduled Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/scheduled",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "scheduled"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "disabled": true,
+                  "description": "Filter by status: pending, inserted, failed"
+                }
+              ]
+            },
+            "description": "Returns list of scheduled messages with their status and scheduled timestamp."
+          },
+          "response": []
+        },
+        {
+          "name": "3. View Messages Inserted into DB",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/inserted",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "inserted"]
+            },
+            "description": "Returns list of messages that have been executed and inserted into the database at their scheduled day and time."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
